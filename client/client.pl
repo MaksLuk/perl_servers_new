@@ -54,7 +54,7 @@ while (1) {
     if($raw_command eq "help") { $command = "001"; }
     elsif($raw_command eq "addr") { $command = "002"; }
     elsif($raw_command eq "date") { $command = "003"; }
-    elsif($raw_command =~ /^upload\s+(\S+)\s+(0|1|2)/i) { $command = "004 $1 $2"; }
+    elsif($raw_command =~ /^upload (\S+) (0|1|2)/i) { $command = "004 $1 $2"; }
     elsif($raw_command =~ /^download\s+(\S+)$/i) { $command = "005 $1"; }
     else {
     	print "Неизвестная команда\n";
@@ -64,12 +64,14 @@ while (1) {
     print $socket "$command\n"; # Отправляем команду на сервер
 
     # Если команда upload, начинаем отправку файла
-    if ($command =~ /^004\s+(\S+)\s+(0|1|2)/i) {
+    if ($command =~ /^004 (\S+) (0|1|2)/i) {
         my $full_path = $1;
+        my $mode = $2;
         my $filename = basename($full_path); # Извлекаем только имя файла
 
         if (-e $full_path) {
             print $socket "$filename\n"; # Отправляем только имя файла
+            print $socket "$mode\n"; # Отправляем мод
             open(my $fh, '<', $full_path) or die "Can't open file: $!";
             while (my $line = <$fh>) {
                 print $socket $line;

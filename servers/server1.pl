@@ -44,10 +44,11 @@ while (my $client = $server->accept()) {
         elsif (/003/i) {
             print $client scalar localtime, "\n";
         }
-        elsif (/004 (\S+)\s+(|0|1|2)/i) {
+        elsif (/004 (\S+) (|0|1|2)/i) {
             my $expected_filename = <$client>; # Получаем имя файла
+            my $mode = <$client>;
             chomp($expected_filename);
-            my $mode = $2;
+            chomp($mode);
 
             print $client "Ready to receive file: $expected_filename\n";
             open(my $fh, '>', $expected_filename) or die "Can't open file: $!";
@@ -56,14 +57,24 @@ while (my $client = $server->accept()) {
                 last if /__END__/; # Маркер конца файла
                 push @content, $_;
             }
-            
+
             if ($mode eq "1") {
-            	@content = map { roman_to_arabic($_) } @content;
+                foreach my $line (@content){
+                    $line =~ s/(M{1,4}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})|M{0,4}(CM|C?D|D?C{1,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})|M{0,4}(CM|CD|D?C{0,3})(XC|X?L|L?X{1,3})(IX|IV|V?I{0,3})|M{0,4}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|I?V|V?I{1,3}))/r2a($&)/ge;
+                    print $fh "$line";
+                  
+                }
             }
             elsif ($mode eq "2") {
-            	@content = map { arabic_to_roman($_) } @content;
+                foreach my $line (@content){
+                    $line =~ s/([0-9]+)/a2r($&)/ge;;
+                    print $fh "$line";  
+                }
             }
-            print $fh $_ foreach @content;
+            else {
+                print $fh $_ foreach @content;
+            }
+
             close($fh);
             print $client "File $expected_filename uploaded successfully.\n";
         }
@@ -96,38 +107,66 @@ while (my $client = $server->accept()) {
 
 close $server;
 
-
-sub roman_to_arabic {
-    my ($line) = @_;
-    my %roman = (
-    	"M" => 1000, "CM" => 900, "D" => 500, "CD" => 400,
-    	"C" => 100, "XC" => 90, "L" => 50, "XL" => 40,
-    	"X" => 10, "IX" => 9, "V" => 5, "IV" => 4, "I" => 1
-    );
+sub r2a {
+    my ($in) = @_;
     my $result = 0;
-    foreach my $s (sort { length($b) <=> length($a) } keys %roman) {
-    	while ($line =~ s/\b$s\b//i) {
-    	    $result += $roman{$s};
-    	}
+    my @chars = split("", $in);
+
+    my %r = (
+        'M' => 1000,
+        'CM' => 900,
+        'D' => 500,
+        'CD' => 400,
+        'C' => 100,
+        'XC' => 90,
+        'L' => 50,
+        'XL' => 40,
+        'X' => 10,
+        'IX' => 9,
+        'V' => 5,
+        'IV' => 4,
+        'I' => 1
+    );
+
+    for (my $i=0; $i < @chars; $i++)
+    {
+        if($i + 1 < @chars && defined($r{$chars[$i] . $chars[$i + 1]}))
+        {
+            $result += $r{$chars[$i] . $chars[$i + 1]};
+            $i++;
+        }
+        else
+        {
+            $result += $r{$chars[$i]};
+        }
     }
-    return $result . "\n";
+    return $result;
 }
 
-sub arabic_to_roman {
-    my ($line) = @_;
-    my %arabic = (
-    	1000 => "M", 900 => "CM", 500 => "D", 400 => "CD",
-    	100 => "C", 90 => "XC", 50 => "L", 40 => "XL",
-    	10 => "X", 9 => "IX", 5 => "V", 4 => "IV", 1 => "I"
+sub a2r {
+    my ($in) = @_;
+    my $result = "";
+    my @ra = ('M', 'CM', 'D', 'CD', 'C', 'XC', 'L', 'XL', 'X', 'IX', 'V', 'IV', 'I');
+    my %r = (
+        'M' => 1000,
+        'CM' => 900,
+        'D' => 500,
+        'CD' => 400,
+        'C' => 100,
+        'XC' => 90,
+        'L' => 50,
+        'XL' => 40,
+        'X' => 10,
+        'IX' => 9,
+        'V' => 5,
+        'IV' => 4,
+        'I' => 1
     );
-    chomp($line);
-    my $num = int($line);
-    my $result = '';
-    foreach my $val (sort { $b <=> $a } keys %arabic) {
-    	while ($num >= $val) {
-    	    $result .= $arabic{$val};
-    	    $num -= $val;
-    	}
+    
+    foreach my $i (@ra){
+        my $repeat = int($in / $r{$i});
+        $in -= $repeat * $r{$i};
+        $result .= $i x $repeat;
     }
-    return "$result\n";
+    return $result
 }
