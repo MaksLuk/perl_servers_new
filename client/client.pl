@@ -70,8 +70,6 @@ while (1) {
         my $filename = basename($full_path); # Извлекаем только имя файла
 
         if (-e $full_path) {
-            print $socket "$filename\n"; # Отправляем только имя файла
-            print $socket "$mode\n"; # Отправляем мод
             open(my $fh, '<', $full_path) or die "Can't open file: $!";
             while (my $line = <$fh>) {
                 print $socket $line;

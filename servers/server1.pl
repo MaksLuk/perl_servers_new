@@ -44,11 +44,9 @@ while (my $client = $server->accept()) {
         elsif (/003/i) {
             print $client scalar localtime, "\n";
         }
-        elsif (/004 (\S+) (|0|1|2)/i) {
-            my $expected_filename = <$client>; # Получаем имя файла
-            my $mode = <$client>;
-            chomp($expected_filename);
-            chomp($mode);
+        elsif (/004 (\S+) (\d)/i) {
+            my $expected_filename = $1;
+            my $mode = $2;
 
             print $client "Ready to receive file: $expected_filename\n";
             open(my $fh, '>', $expected_filename) or die "Can't open file: $!";
