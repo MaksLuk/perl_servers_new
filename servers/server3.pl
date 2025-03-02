@@ -99,9 +99,6 @@ sub handle_client_command {
     print $client "__END_OF_RESPONSE__\n";
 }
 
-# Остальные функции (receive_file, send_file, r2a, a2r) остаются без изменений
-# ... (вставить реализации из оригинального кода)
-
 sub receive_file {
     my ($client, $filename, $mode) = @_;
     open(my $fh, '>', $filename) or die "Can't open file: $!";
