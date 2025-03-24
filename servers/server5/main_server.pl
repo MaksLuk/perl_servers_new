@@ -4,7 +4,11 @@ use warnings;
 use IO::Socket;
 use Net::hostent;
 
-my $PORT = 9001;
+my $PORT = 9000;
+
+system("perl date_server.pl &");
+system("perl send_file_server.pl &");
+system("perl receive_file_server.pl &");
 
 my $server = IO::Socket::INET->new(
     LocalHost => '0.0.0.0',
@@ -44,9 +48,12 @@ sub distributed_handle_client {
             print $client "Client address: $client_addr, Server address: ", $server->sockhost, "\n";
         } elsif ($command =~ /003/i) {
             call_the_server_date('127.0.0.3', 6000, $client);
-        } elsif ($command =~ /004 (\S+) (\d)/i) {
-            my $filename = $1;
-            my $mode = $2;
+        } elsif ($command =~ /004 (\S+) (\S+)?/i) {
+		    my $filename = $1;
+		    my $mode = 0;
+		    if (defined $2) {
+		    	$mode = ($2 eq '-a') ? 1: ($2 eq '-r') ? 2 : 0;
+		    }
             print "Ready to receive file: $filename\n";
             call_the_server_receive('127.0.0.4', 7000, $client, $filename, $mode);
         } elsif ($command =~ /005 (\S+)/i) {

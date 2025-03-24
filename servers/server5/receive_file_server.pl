@@ -3,6 +3,7 @@ use strict;
 use warnings;
 use IO::Socket;
 use Net::hostent;
+require "/home/student/Загрузки/perl_servers_new/servers/funcs.pl";
 
 my $PORT = 7000;
 
@@ -51,60 +52,3 @@ while (my $client = $server->accept()) {
 close $server; 
 
 exit 0;
-
-sub r2a {
-    my ($in) = @_;
-    my $result = 0;
-    my @chars = split("", $in);
-    my %r = (
-        'M' => 1000,
-        'CM' => 900,
-        'D' => 500,
-        'CD' => 400,
-        'C' => 100,
-        'XC' => 90,
-        'L' => 50,
-        'XL' => 40,
-        'X' => 10,
-        'IX' => 9,
-        'V' => 5,
-        'IV' => 4,
-        'I' => 1
-    );
-    for (my $i=0; $i < @chars; $i++) {
-        if($i + 1 < @chars && defined($r{$chars[$i] . $chars[$i + 1]})) {
-            $result += $r{$chars[$i] . $chars[$i + 1]};
-            $i++;
-        } else {
-            $result += $r{$chars[$i]};
-        }
-    }
-    return $result;
-}
-
-sub a2r {
-    my ($in) = @_;
-    my $result = "";
-    my @ra = ('M', 'CM', 'D', 'CD', 'C', 'XC', 'L', 'XL', 'X', 'IX', 'V', 'IV', 'I');
-    my %r = (
-        'M' => 1000,
-        'CM' => 900,
-        'D' => 500,
-        'CD' => 400,
-        'C' => 100,
-        'XC' => 90,
-        'L' => 50,
-        'XL' => 40,
-        'X' => 10,
-        'IX' => 9,
-        'V' => 5,
-        'IV' => 4,
-        'I' => 1
-    );
-    foreach my $i (@ra) {
-        my $repeat = int($in / $r{$i});
-        $in -= $repeat * $r{$i};
-        $result .= $i x $repeat;
-    }
-    return $result;
-}

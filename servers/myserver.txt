@@ -1,0 +1,6 @@
+[New connection from 127.0.0.1]
+New command: help
+Command help done
+New command: addr
+Command addr done
+[Connection closed]

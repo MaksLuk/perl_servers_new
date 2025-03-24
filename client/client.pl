@@ -6,7 +6,7 @@ use File::Basename; # Для извлечения имени файла
 
 # Адрес и порт сервера
 my $HOST = '127.0.0.1'; # или другой IP-адрес сервера
-my $PORT = 9001;
+my $PORT = 9000;
 
 # Создаем клиентский сокет
 my $socket = IO::Socket::INET->new(
@@ -54,7 +54,10 @@ while (1) {
     if($raw_command eq "help") { $command = "001"; }
     elsif($raw_command eq "addr") { $command = "002"; }
     elsif($raw_command eq "date") { $command = "003"; }
-    elsif($raw_command =~ /^upload (\S+) (0|1|2)/i) { $command = "004 $1 $2"; }
+    elsif($raw_command =~ /^upload (\S+) (\S+)?/i) {
+    	if ($2) { $command = "004 $1 $2"; }
+    	else { $command = "004 $1 "; }
+    }
     elsif($raw_command =~ /^download\s+(\S+)$/i) { $command = "005 $1"; }
     else {
     	print "Неизвестная команда\n";
@@ -64,7 +67,7 @@ while (1) {
     print $socket "$command\n"; # Отправляем команду на сервер
 
     # Если команда upload, начинаем отправку файла
-    if ($command =~ /^004 (\S+) (0|1|2)/i) {
+    if ($command =~ /^004 (\S+) (\S+)?/i) {
         my $full_path = $1;
         my $mode = $2;
         my $filename = basename($full_path); # Извлекаем только имя файла
